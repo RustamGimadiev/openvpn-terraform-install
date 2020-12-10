@@ -24,17 +24,31 @@ data "aws_ami" "amazon_linux_2" {
   owners = ["amazon"]
 }
 
-resource "aws_key_pair" "openvpn" {
-  key_name   = var.ssh_private_key_file
-  public_key = file("${path.module}/${var.ssh_public_key_file}")
+resource "tls_private_key" "openvpn" {
+  algorithm = "RSA"
 }
+
+resource "local_file" "openvpn" {
+  filename        = "openvpn.pem"
+  file_permission = "0600"
+  content         = tls_private_key.openvpn.private_key_pem
+}
+
+module "key_pair" {
+  source  = "terraform-aws-modules/key-pair/aws"
+  version = "0.6.0"
+
+  key_name   = "openvpn-ssh-key"
+  public_key = tls_private_key.openvpn.public_key_openssh
+}
+
 
 resource "aws_instance" "openvpn" {
   ami                         = data.aws_ami.amazon_linux_2.id
   associate_public_ip_address = true
   instance_type               = var.instance_type
-  key_name                    = aws_key_pair.openvpn.key_name
-  subnet_id                   = aws_subnet.openvpn.id
+  key_name                    = module.key_pair.this_key_pair_key_name
+  subnet_id                   = element(tolist(data.aws_subnet_ids.openvpn.ids), 1)
 
   vpc_security_group_ids = [
     aws_security_group.openvpn.id,
@@ -59,7 +73,7 @@ resource "null_resource" "openvpn_bootstrap" {
     host        = aws_instance.openvpn.public_ip
     user        = var.ec2_username
     port        = "22"
-    private_key = file("${path.module}/${var.ssh_private_key_file}")
+    private_key = tls_private_key.openvpn.private_key_pem
     agent       = false
   }
 
@@ -92,7 +106,7 @@ resource "null_resource" "openvpn_update_users_script" {
     host        = aws_instance.openvpn.public_ip
     user        = var.ec2_username
     port        = "22"
-    private_key = file("${path.module}/${var.ssh_private_key_file}")
+    private_key = tls_private_key.openvpn.private_key_pem
     agent       = false
   }
 
@@ -118,10 +132,9 @@ resource "null_resource" "openvpn_download_configurations" {
 
   provisioner "local-exec" {
     command = <<EOT
-    mkdir -p ${var.ovpn_config_directory};
     scp -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
-        -i ${var.ssh_private_key_file} ${var.ec2_username}@${aws_instance.openvpn.public_ip}:/home/${var.ec2_username}/*.ovpn ${var.ovpn_config_directory}/
+        -i ${path.root}/openvpn.pem ${var.ec2_username}@${aws_instance.openvpn.public_ip}:/home/${var.ec2_username}/*.ovpn ${path.root}
     
 EOT
 
