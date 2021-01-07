@@ -65,6 +65,12 @@ resource "aws_instance" "openvpn" {
     Name        = var.tag_name
     Provisioner = "Terraform"
   }
+    
+  lifecycle {
+    ignore_changes = [
+      ami,
+    ]
+  }
 }
 
 resource "null_resource" "openvpn_bootstrap" {
