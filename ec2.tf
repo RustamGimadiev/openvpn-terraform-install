@@ -21,7 +21,7 @@ data "aws_ami" "amazon_linux_2" {
     values = ["hvm"]
   }
 
-  owners = ["amazon"]
+  owners = [data.aws_caller_identity.current.account_id, "amazon"]
 }
 
 resource "tls_private_key" "openvpn" {
@@ -42,9 +42,12 @@ module "key_pair" {
   public_key = tls_private_key.openvpn.public_key_openssh
 }
 
+variable "openvpn_ami" {
+  default = ""
+}
 
 resource "aws_instance" "openvpn" {
-  ami                         = data.aws_ami.amazon_linux_2.id
+  ami                         = coalesce(var.openvpn_ami, data.aws_ami.amazon_linux_2.id)
   associate_public_ip_address = true
   instance_type               = var.instance_type
   key_name                    = module.key_pair.this_key_pair_key_name
