@@ -21,7 +21,7 @@ data "aws_ami" "amazon_linux_2" {
     values = ["hvm"]
   }
 
-  owners = [data.aws_caller_identity.current.account_id, "amazon"]
+  owners = "amazon"
 }
 
 resource "tls_private_key" "openvpn" {
@@ -149,4 +149,3 @@ EOT
 
   }
 }
-
