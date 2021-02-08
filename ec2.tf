@@ -21,7 +21,7 @@ data "aws_ami" "amazon_linux_2" {
     values = ["hvm"]
   }
 
-  owners = "amazon"
+  owners = ["amazon"]
 }
 
 resource "tls_private_key" "openvpn" {
