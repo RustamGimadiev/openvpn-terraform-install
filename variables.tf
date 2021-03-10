@@ -27,3 +27,14 @@ variable "ovpn_users" {
   type        = list(string)
   description = "The list of users to automatically provision with OpenVPN access"
 }
+
+variable "vpc_id" {
+  type        = string
+  description = "The ID of the existing AWS VPC"
+  default     = ""
+}
+
+variable "subnet_ids" {
+  type        = list(string)
+  description = "The list of existing AWS subnets"
+}

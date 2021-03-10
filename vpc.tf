@@ -9,14 +9,19 @@ resource "aws_default_vpc" "openvpn" {
 }
 
 data "aws_subnet_ids" "openvpn" {
-  vpc_id = aws_default_vpc.openvpn.id
+  vpc_id = local.vpc_id
+}
+
+locals {
+  vpc_id     = var.vpc_id == "" ? aws_default_vpc.openvpn.id : var.vpc_id
+  subnet_ids = var.subnet_ids == [] ? data.aws_subnet_ids.openvpn.ids : var.subnet_ids
 }
 
 resource "aws_security_group" "openvpn" {
   name        = "openvpn"
   description = "Allow inbound UDP access to OpenVPN and unrestricted egress"
 
-  vpc_id = aws_default_vpc.openvpn.id
+  vpc_id = local.vpc_id
 
   tags = {
     Name        = var.tag_name
@@ -42,7 +47,7 @@ resource "aws_security_group" "ssh_from_local" {
   name        = "ssh-from-local"
   description = "Allow SSH access only from local machine"
 
-  vpc_id = aws_default_vpc.openvpn.id
+  vpc_id = local.vpc_id
 
   tags = {
     Name        = var.tag_name

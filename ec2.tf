@@ -51,7 +51,7 @@ resource "aws_instance" "openvpn" {
   associate_public_ip_address = true
   instance_type               = var.instance_type
   key_name                    = module.key_pair.this_key_pair_key_name
-  subnet_id                   = element(tolist(data.aws_subnet_ids.openvpn.ids), 1)
+  subnet_id                   = element(tolist(local.subnet_ids), 1)
 
   vpc_security_group_ids = [
     aws_security_group.openvpn.id,
@@ -68,7 +68,7 @@ resource "aws_instance" "openvpn" {
     Name        = var.tag_name
     Provisioner = "Terraform"
   }
-    
+
   lifecycle {
     ignore_changes = [
       ami,
