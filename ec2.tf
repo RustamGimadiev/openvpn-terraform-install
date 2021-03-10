@@ -29,7 +29,7 @@ resource "tls_private_key" "openvpn" {
 }
 
 resource "local_file" "openvpn" {
-  filename        = "openvpn.pem"
+  filename        = "${path.root}/openvpn.pem"
   file_permission = "0600"
   content         = tls_private_key.openvpn.private_key_pem
 }
