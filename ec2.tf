@@ -77,6 +77,10 @@ resource "aws_instance" "openvpn" {
 }
 
 resource "null_resource" "openvpn_bootstrap" {
+  triggers = {
+    instance_ids = join(",", aws_instance.openvpn.id)
+  }
+
   connection {
     type        = "ssh"
     host        = aws_instance.openvpn.public_ip
