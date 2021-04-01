@@ -78,7 +78,7 @@ resource "aws_instance" "openvpn" {
 
 resource "null_resource" "openvpn_bootstrap" {
   triggers = {
-    instance_ids = join(",", aws_instance.openvpn.id)
+    instance_id = aws_instance.openvpn.id
   }
 
   connection {
